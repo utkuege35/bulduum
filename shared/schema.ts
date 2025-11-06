@@ -33,6 +33,7 @@ export const profiles = pgTable("profiles", {
   phone: text("phone"),
   location: text("location"),
   avatar: text("avatar"),
+  hourlyRate: integer("hourly_rate"),
   isVerified: boolean("is_verified").default(false).notNull(),
   categoryId: varchar("category_id").references(() => categories.id),
   subcategoryId: varchar("subcategory_id").references(() => subcategories.id),
