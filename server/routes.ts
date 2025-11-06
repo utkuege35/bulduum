@@ -62,7 +62,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const profile = await storage.updateProfile(userId, req.body);
+      
+      // Validate the update data - prevent userId changes and ensure valid fields
+      const updateSchema = insertProfileSchema.partial().omit({ userId: true });
+      const validatedData = updateSchema.parse(req.body);
+      
+      const profile = await storage.updateProfile(userId, validatedData);
       if (!profile) {
         return res.status(404).json({ message: "Profile not found" });
       }
