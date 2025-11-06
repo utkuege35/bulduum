@@ -23,8 +23,8 @@ export default function Providers() {
   const categoryIdParam = searchParams.get("categoryId");
   const subcategoryIdParam = searchParams.get("subcategoryId");
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categoryIdParam || "");
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string>(subcategoryIdParam || "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categoryIdParam || "all");
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string>(subcategoryIdParam || "all");
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -39,15 +39,19 @@ export default function Providers() {
       if (!res.ok) throw new Error("Failed to fetch subcategories");
       return res.json();
     },
-    enabled: !!selectedCategoryId,
+    enabled: !!selectedCategoryId && selectedCategoryId !== "all",
   });
 
   const { data: providers = [], isLoading } = useQuery<ProviderWithDetails[]>({
     queryKey: ["/api/providers", { categoryId: selectedCategoryId, subcategoryId: selectedSubcategoryId }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedCategoryId) params.append("categoryId", selectedCategoryId);
-      if (selectedSubcategoryId) params.append("subcategoryId", selectedSubcategoryId);
+      if (selectedCategoryId && selectedCategoryId !== "all") {
+        params.append("categoryId", selectedCategoryId);
+      }
+      if (selectedSubcategoryId && selectedSubcategoryId !== "all") {
+        params.append("subcategoryId", selectedSubcategoryId);
+      }
       
       const res = await fetch(`/api/providers?${params.toString()}`, {
         credentials: "include",
@@ -79,14 +83,14 @@ export default function Providers() {
                 value={selectedCategoryId}
                 onValueChange={(value) => {
                   setSelectedCategoryId(value);
-                  setSelectedSubcategoryId("");
+                  setSelectedSubcategoryId("all");
                 }}
               >
                 <SelectTrigger className="w-[200px]" data-testid="select-filter-category">
                   <SelectValue placeholder="Kategori Seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tüm Kategoriler</SelectItem>
+                  <SelectItem value="all">Tüm Kategoriler</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -95,7 +99,7 @@ export default function Providers() {
                 </SelectContent>
               </Select>
 
-              {selectedCategoryId && (
+              {selectedCategoryId && selectedCategoryId !== "all" && (
                 <Select
                   value={selectedSubcategoryId}
                   onValueChange={setSelectedSubcategoryId}
@@ -104,7 +108,7 @@ export default function Providers() {
                     <SelectValue placeholder="Alt Kategori Seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tüm Alt Kategoriler</SelectItem>
+                    <SelectItem value="all">Tüm Alt Kategoriler</SelectItem>
                     {subcategories.map((sub) => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.name}
@@ -141,7 +145,7 @@ export default function Providers() {
           ) : providers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">
-                {selectedCategoryId || selectedSubcategoryId
+                {(selectedCategoryId && selectedCategoryId !== "all") || (selectedSubcategoryId && selectedSubcategoryId !== "all")
                   ? "Bu kategoride henüz hizmet sağlayıcı bulunmuyor."
                   : "Henüz kayıtlı hizmet sağlayıcı bulunmuyor."}
               </p>
