@@ -67,6 +67,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = insertProfileSchema.partial().omit({ userId: true });
       const validatedData = updateSchema.parse(req.body);
       
+      // Ensure at least one field is being updated
+      if (Object.keys(validatedData).length === 0) {
+        return res.status(400).json({ message: "At least one field must be provided for update" });
+      }
+      
       const profile = await storage.updateProfile(userId, validatedData);
       if (!profile) {
         return res.status(404).json({ message: "Profile not found" });
