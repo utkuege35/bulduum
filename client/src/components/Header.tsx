@@ -1,11 +1,34 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, Search } from "lucide-react";
+import { Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import logoImage from "@assets/Logo300yeni_1762458504612.jpg";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
+  };
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "U";
+    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
@@ -38,16 +61,52 @@ export default function Header() {
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} data-testid="button-mobile-menu">
               <Menu className="h-5 w-5" />
             </Button>
-            <Link href="/giris" data-testid="link-login">
-              <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-                Giriş Yap
-              </Button>
-            </Link>
-            <Link href="/kayit" data-testid="link-signup">
-              <Button variant="default" size="sm" data-testid="button-signup">
-                Kayıt Ol
-              </Button>
-            </Link>
+            
+            {!isLoading && (
+              <>
+                {isAuthenticated && user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.profileImageUrl ?? undefined} alt={user.firstName ?? "User"} />
+                          <AvatarFallback>{getInitials(user.firstName ?? undefined, user.lastName ?? undefined)}</AvatarFallback>
+                        </Avatar>
+                        <span className="hidden md:inline">{user.firstName ?? user.email}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href="/profil" className="cursor-pointer" data-testid="link-profile">
+                          <User className="mr-2 h-4 w-4" />
+                          Profilim
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/mesajlar" className="cursor-pointer" data-testid="link-messages">
+                          <User className="mr-2 h-4 w-4" />
+                          Mesajlarım
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer" data-testid="button-logout">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Çıkış Yap
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={handleLogin} data-testid="button-login">
+                      Giriş Yap
+                    </Button>
+                    <Button variant="default" size="sm" onClick={handleLogin} data-testid="button-signup">
+                      Kayıt Ol
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -68,11 +127,11 @@ export default function Header() {
                 Nasıl Çalışır?
               </Button>
             </Link>
-            <Link href="/giris" data-testid="link-login-mobile">
-              <Button variant="ghost" className="w-full justify-start">
+            {!isAuthenticated && !isLoading && (
+              <Button variant="ghost" className="w-full justify-start" onClick={handleLogin} data-testid="button-login-mobile">
                 Giriş Yap
               </Button>
-            </Link>
+            )}
           </nav>
         )}
       </div>
