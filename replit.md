@@ -12,7 +12,7 @@ Bulduum is a Turkish-language marketplace platform that connects service provide
 - Database: PostgreSQL (via Neon serverless)
 - ORM: Drizzle
 - UI Framework: Shadcn/ui with Tailwind CSS
-- Authentication: Replit Auth (OpenID Connect)
+- Authentication: Session-based email/password (express-session + bcryptjs)
 - State Management: TanStack Query (React Query)
 - Routing: Wouter
 
@@ -78,14 +78,30 @@ Preferred communication style: Simple, everyday language.
 - `/api/messages` - Messaging system
 - `/api/reviews` - Review submission and retrieval
 
-**Authentication Flow**:
-- Replit Auth (OpenID Connect) for identity provider
-- Session-based authentication with PostgreSQL session store
+**Authentication Flow** (Updated November 2025):
+- Self-hosted email/password authentication (no OAuth required)
+- Session-based authentication with PostgreSQL session store (connect-pg-simple)
+- Password hashing via bcryptjs (10 salt rounds)
 - `isAuthenticated` middleware guard for protected routes
-- Token refresh mechanism using `updateUserSession`
+- httpOnly cookies with SameSite=strict for CSRF protection
+- Sessions table auto-created on first app boot (`createTableIfMissing: true`)
 
-**Alternatives Considered**:
-- JWT authentication was considered but session-based chosen for better security defaults and Replit platform integration
+**Auth Endpoints**:
+- POST /api/auth/register - User registration with email/password
+- POST /api/auth/login - Login with credential validation
+- POST /api/auth/logout - Session destruction
+- GET /api/auth/user - Current user info (requires session)
+
+**Frontend Routes**:
+- /giris - Login page
+- /kayit-ol - Registration page
+- /profil - Profile setup (post-registration redirect)
+
+**Migration Rationale** (November 2025):
+- Removed Replit Auth dependency to eliminate OAuth requirement
+- Users can now register without Replit accounts (critical for marketplace accessibility)
+- Session-based auth chosen over JWT to avoid XSS risks from localStorage token storage
+- httpOnly cookies provide better security defaults than client-side JWT storage
 
 ### Data Layer
 
