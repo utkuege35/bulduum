@@ -50,11 +50,22 @@ export default function Header() {
                 Hizmet Sağlayıcılar
               </Button>
             </Link>
-            <Link href="/#nasil-calisir" data-testid="link-how-it-works">
-              <Button variant="ghost" size="sm" className="text-base">
-                Nasıl Çalışır?
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-base"
+              onClick={() => {
+                const element = document.getElementById('nasil-calisir');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  window.location.href = '/#nasil-calisir';
+                }
+              }}
+              data-testid="link-how-it-works"
+            >
+              Nasıl Çalışır?
+            </Button>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -122,11 +133,22 @@ export default function Header() {
                 Hizmet Sağlayıcılar
               </Button>
             </Link>
-            <Link href="/#nasil-calisir" data-testid="link-how-it-works-mobile">
-              <Button variant="ghost" className="w-full justify-start">
-                Nasıl Çalışır?
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => {
+                const element = document.getElementById('nasil-calisir');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                  setMobileMenuOpen(false);
+                } else {
+                  window.location.href = '/#nasil-calisir';
+                }
+              }}
+              data-testid="link-how-it-works-mobile"
+            >
+              Nasıl Çalışır?
+            </Button>
             {!isAuthenticated && !isLoading && (
               <Button variant="ghost" className="w-full justify-start" onClick={handleLogin} data-testid="button-login-mobile">
                 Giriş Yap
