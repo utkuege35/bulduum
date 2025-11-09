@@ -14,10 +14,11 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for Email/Password Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").notNull().unique(),
+  password: varchar("password").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -81,6 +82,19 @@ export const upsertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+// Auth schemas
+export const registerSchema = z.object({
+  email: z.string().email("Geçerli bir email adresi giriniz"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  firstName: z.string().min(1, "İsim gereklidir"),
+  lastName: z.string().optional(),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email("Geçerli bir email adresi giriniz"),
+  password: z.string().min(1, "Şifre gereklidir"),
+});
+
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
   createdAt: true,
@@ -111,6 +125,8 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
