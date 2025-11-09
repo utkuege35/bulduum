@@ -1,24 +1,104 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, hashPassword, comparePassword, generateToken } from "./auth";
 import { z } from "zod";
 import { 
   insertProfileSchema, 
   insertCategorySchema,
   insertSubcategorySchema,
   insertMessageSchema,
-  insertReviewSchema 
+  insertReviewSchema,
+  registerSchema,
+  loginSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Register route
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const validatedData = registerSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Bu email adresi zaten kullanılıyor" });
+      }
+
+      const hashedPassword = await hashPassword(validatedData.password);
+      const user = await storage.upsertUser({
+        email: validatedData.email,
+        password: hashedPassword,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName || null,
+      });
+
+      const token = generateToken(user);
+      res.status(201).json({
+        message: "Kayıt başarılı",
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error registering user:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Geçersiz giriş verileri", errors: error.errors });
+      }
+      res.status(500).json({ message: "Kayıt sırasında hata oluştu" });
+    }
+  });
+
+  // Login route
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      
+      const user = await storage.getUserByEmail(validatedData.email);
+      if (!user) {
+        return res.status(401).json({ message: "Email veya şifre hatalı" });
+      }
+
+      const isPasswordValid = await comparePassword(validatedData.password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Email veya şifre hatalı" });
+      }
+
+      const token = generateToken(user);
+      res.json({
+        message: "Giriş başarılı",
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error logging in:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Geçersiz giriş verileri", errors: error.errors });
+      }
+      res.status(500).json({ message: "Giriş sırasında hata oluştu" });
+    }
+  });
+
+  // Logout route (client-side will remove token)
+  app.post('/api/auth/logout', (req, res) => {
+    res.json({ message: "Çıkış başarılı" });
+  });
+
+  // Get current user
+  app.get('/api/auth/user', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -47,9 +127,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile routes
-  app.post('/api/profile', isAuthenticated, async (req: any, res) => {
+  app.post('/api/profile', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const validatedData = insertProfileSchema.parse({ ...req.body, userId });
       const profile = await storage.createProfile(validatedData);
       res.json(profile);
@@ -59,9 +139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/profile', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       
       // Validate the update data - prevent userId changes and ensure valid fields
       const updateSchema = insertProfileSchema.partial().omit({ userId: true });
@@ -136,9 +216,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message routes
-  app.get('/api/messages', isAuthenticated, async (req: any, res) => {
+  app.get('/api/messages', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const conversations = await storage.getUserConversations(userId);
       res.json(conversations);
     } catch (error) {
@@ -147,9 +227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/messages/:otherUserId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/messages/:otherUserId', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const messages = await storage.getConversation(userId, req.params.otherUserId);
       res.json(messages);
     } catch (error) {
@@ -158,9 +238,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/messages', isAuthenticated, async (req, res) => {
     try {
-      const senderId = req.user.claims.sub;
+      const senderId = req.user!.id;
       const validatedData = insertMessageSchema.parse({ ...req.body, senderId });
       const message = await storage.createMessage(validatedData);
       res.json(message);
@@ -191,9 +271,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/reviews', isAuthenticated, async (req: any, res) => {
+  app.post('/api/reviews', isAuthenticated, async (req, res) => {
     try {
-      const customerId = req.user.claims.sub;
+      const customerId = req.user!.id;
       const validatedData = insertReviewSchema.parse({ ...req.body, customerId });
       const review = await storage.createReview(validatedData);
       res.json(review);
