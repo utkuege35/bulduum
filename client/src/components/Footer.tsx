@@ -30,7 +30,7 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">Kurumsal</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/hakkimizda" className="text-muted-foreground hover:text-foreground">Hakkımızda</Link></li>
-              <li><Link href="/nasil-calisir" className="text-muted-foreground hover:text-foreground">Nasıl Çalışır?</Link></li>
+              <li><Link href="/#nasil-calisir" className="text-muted-foreground hover:text-foreground">Nasıl Çalışır?</Link></li>
               <li><Link href="/iletisim" className="text-muted-foreground hover:text-foreground">İletişim</Link></li>
               <li><Link href="/kariyer" className="text-muted-foreground hover:text-foreground">Kariyer</Link></li>
             </ul>

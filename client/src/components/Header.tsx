@@ -50,7 +50,7 @@ export default function Header() {
                 Hizmet Sağlayıcılar
               </Button>
             </Link>
-            <Link href="/nasil-calisir" data-testid="link-how-it-works">
+            <Link href="/#nasil-calisir" data-testid="link-how-it-works">
               <Button variant="ghost" size="sm" className="text-base">
                 Nasıl Çalışır?
               </Button>
@@ -122,7 +122,7 @@ export default function Header() {
                 Hizmet Sağlayıcılar
               </Button>
             </Link>
-            <Link href="/nasil-calisir" data-testid="link-how-it-works-mobile">
+            <Link href="/#nasil-calisir" data-testid="link-how-it-works-mobile">
               <Button variant="ghost" className="w-full justify-start">
                 Nasıl Çalışır?
               </Button>
