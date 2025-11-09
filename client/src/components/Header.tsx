@@ -1,9 +1,12 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import logoImage from "@assets/Logo300yeni_1762458504612.jpg";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,14 +18,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/auth/logout");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Çıkış yapıldı",
+        description: "Başarıyla çıkış yaptınız.",
+      });
+      setLocation("/");
+    },
+  });
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    logoutMutation.mutate();
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -108,12 +124,16 @@ export default function Header() {
                   </DropdownMenu>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={handleLogin} data-testid="button-login">
-                      Giriş Yap
-                    </Button>
-                    <Button variant="default" size="sm" onClick={handleLogin} data-testid="button-signup">
-                      Kayıt Ol
-                    </Button>
+                    <Link href="/giris">
+                      <Button variant="ghost" size="sm" className="hidden md:inline-flex" data-testid="button-login">
+                        Giriş Yap
+                      </Button>
+                    </Link>
+                    <Link href="/kayit-ol">
+                      <Button variant="default" size="sm" data-testid="button-signup">
+                        Kayıt Ol
+                      </Button>
+                    </Link>
                   </>
                 )}
               </>
@@ -150,9 +170,11 @@ export default function Header() {
               Nasıl Çalışır?
             </Button>
             {!isAuthenticated && !isLoading && (
-              <Button variant="ghost" className="w-full justify-start" onClick={handleLogin} data-testid="button-login-mobile">
-                Giriş Yap
-              </Button>
+              <Link href="/giris" className="w-full">
+                <Button variant="ghost" className="w-full justify-start" data-testid="button-login-mobile">
+                  Giriş Yap
+                </Button>
+              </Link>
             )}
           </nav>
         )}

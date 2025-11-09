@@ -1,29 +1,23 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-import type { User } from "@shared/schema";
 
-const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
-const JWT_EXPIRES_IN = "7d";
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-}
-
-export interface JWTPayload {
-  id: string;
-  email: string;
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+  }
 }
 
 declare global {
   namespace Express {
-    interface User extends AuthUser {}
+    interface User {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+    }
   }
 }
 
@@ -44,6 +38,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: sessionTtl,
     },
   });
@@ -61,45 +56,22 @@ export async function comparePassword(
   return bcrypt.compare(password, hashedPassword);
 }
 
-export function generateToken(user: User): string {
-  const payload: JWTPayload = {
-    id: user.id,
-    email: user.email,
-  };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-}
-
-export function verifyToken(token: string): JWTPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch (error) {
-    return null;
-  }
-}
-
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith("Bearer ") 
-    ? authHeader.substring(7) 
-    : null;
+  const userId = req.session?.userId;
 
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized - No token provided" });
-  }
-
-  const payload = verifyToken(token);
-  if (!payload) {
-    return res.status(401).json({ message: "Unauthorized - Invalid token" });
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized - Not logged in" });
   }
 
   try {
-    const user = await storage.getUser(payload.id);
+    const user = await storage.getUser(userId);
     if (!user) {
+      req.session.userId = undefined;
       return res.status(401).json({ message: "Unauthorized - User not found" });
     }
 

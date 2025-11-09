@@ -1,7 +1,7 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, hashPassword, comparePassword, generateToken } from "./auth";
+import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./auth";
 import { z } from "zod";
 import { 
   insertProfileSchema, 
@@ -35,10 +35,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: validatedData.lastName || null,
       });
 
-      const token = generateToken(user);
+      req.session.userId = user.id;
+      
       res.status(201).json({
         message: "Kayıt başarılı",
-        token,
         user: {
           id: user.id,
           email: user.email,
@@ -70,10 +70,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Email veya şifre hatalı" });
       }
 
-      const token = generateToken(user);
+      req.session.userId = user.id;
+      
       res.json({
         message: "Giriş başarılı",
-        token,
         user: {
           id: user.id,
           email: user.email,
@@ -90,9 +90,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout route (client-side will remove token)
+  // Logout route
   app.post('/api/auth/logout', (req, res) => {
-    res.json({ message: "Çıkış başarılı" });
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).json({ message: "Çıkış sırasında hata oluştu" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Çıkış başarılı" });
+    });
   });
 
   // Get current user
