@@ -20,7 +20,6 @@ const profileFormSchema = insertProfileSchema
   .extend({
     city: z.string().min(1, "Şehir gereklidir"),
     district: z.string().min(1, "İlçe gereklidir"),
-    neighborhood: z.string().min(1, "Mahalle gereklidir"),
   });
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
@@ -40,7 +39,6 @@ export default function ProfileSetup() {
       phone: "",
       city: "",
       district: "",
-      neighborhood: "",
       categoryId: undefined,
       subcategoryId: undefined,
       hourlyRate: undefined,
@@ -208,25 +206,6 @@ export default function ProfileSetup() {
                         <Input
                           placeholder="Kepez, Kadıköy, Konak"
                           data-testid="input-district"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="neighborhood"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mahalle *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Yıldız Mahallesi"
-                          data-testid="input-neighborhood"
                           {...field}
                           value={field.value ?? ""}
                         />

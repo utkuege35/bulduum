@@ -34,7 +34,6 @@ export const profiles = pgTable("profiles", {
   phone: text("phone"),
   city: text("city"),
   district: text("district"),
-  neighborhood: text("neighborhood"),
   avatar: text("avatar"),
   hourlyRate: integer("hourly_rate"),
   isVerified: boolean("is_verified").default(false).notNull(),
