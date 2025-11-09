@@ -15,7 +15,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Category, Subcategory } from "@shared/schema";
 
-const profileFormSchema = insertProfileSchema.omit({ userId: true });
+const profileFormSchema = insertProfileSchema
+  .omit({ userId: true })
+  .extend({
+    city: z.string().min(1, "Şehir gereklidir"),
+    district: z.string().min(1, "İlçe gereklidir"),
+    neighborhood: z.string().min(1, "Mahalle gereklidir"),
+  });
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function ProfileSetup() {
@@ -32,7 +38,9 @@ export default function ProfileSetup() {
       userType: "customer",
       bio: "",
       phone: "",
-      location: "",
+      city: "",
+      district: "",
+      neighborhood: "",
       categoryId: undefined,
       subcategoryId: undefined,
       hourlyRate: undefined,
@@ -173,19 +181,56 @@ export default function ProfileSetup() {
 
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Konum</FormLabel>
+                      <FormLabel>Şehir *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="İstanbul, Kadıköy"
-                          data-testid="input-location"
+                          placeholder="Antalya, İstanbul, İzmir"
+                          data-testid="input-city"
                           {...field}
                           value={field.value ?? ""}
                         />
                       </FormControl>
-                      <FormDescription>Şehir ve ilçe bilgisi</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="district"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>İlçe *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Kepez, Kadıköy, Konak"
+                          data-testid="input-district"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="neighborhood"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mahalle *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Yıldız Mahallesi"
+                          data-testid="input-neighborhood"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
