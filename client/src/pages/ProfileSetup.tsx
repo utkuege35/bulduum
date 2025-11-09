@@ -39,6 +39,7 @@ export default function ProfileSetup() {
       phone: "",
       city: "",
       district: "",
+      neighborhood: "",
       categoryId: undefined,
       subcategoryId: undefined,
       hourlyRate: undefined,
@@ -210,6 +211,26 @@ export default function ProfileSetup() {
                           value={field.value ?? ""}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="neighborhood"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mahalle</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Yıldız Mahallesi (İsteğe bağlı)"
+                          data-testid="input-neighborhood"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormDescription>İsteğe bağlı</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
