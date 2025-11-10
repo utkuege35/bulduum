@@ -9,14 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Category, Subcategory } from "@shared/schema";
 
 const profileFormSchema = insertProfileSchema
-  .omit({ userId: true })
+  .omit({ userId: true, userType: true })
   .extend({
     city: z.string().min(1, "Şehir gereklidir"),
     district: z.string().min(1, "İlçe gereklidir"),
@@ -34,7 +33,6 @@ export default function ProfileSetup() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      userType: "customer",
       bio: "",
       phone: "",
       city: "",
@@ -82,8 +80,6 @@ export default function ProfileSetup() {
     },
   });
 
-  const userType = form.watch("userType");
-
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-2xl mx-auto">
@@ -91,47 +87,12 @@ export default function ProfileSetup() {
           <CardHeader>
             <CardTitle>Profilinizi Tamamlayın</CardTitle>
             <CardDescription>
-              Bulduum'da hizmet vermek veya hizmet almak için profilinizi oluşturun
+              Hizmet vermek veya hizmet aramak için profilinizi oluşturun. Kategori seçerseniz ilan verebilirsiniz.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => createProfile.mutate(data))} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="userType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hesap Türü</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex gap-4"
-                        >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="customer" data-testid="radio-customer" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              Müşteri (Hizmet Arıyorum)
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="provider" data-testid="radio-provider" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              Hizmet Sağlayıcı
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="bio"
@@ -140,7 +101,7 @@ export default function ProfileSetup() {
                       <FormLabel>Kısa Tanıtım</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={userType === "provider" ? "Kendinizi ve hizmetlerinizi tanıtın..." : "Kendiniz hakkında kısa bilgi..."}
+                          placeholder="Kendiniz hakkında kısa bilgi..."
                           className="resize-none"
                           rows={4}
                           data-testid="input-bio"
@@ -149,9 +110,7 @@ export default function ProfileSetup() {
                         />
                       </FormControl>
                       <FormDescription>
-                        {userType === "provider" 
-                          ? "Potansiyel müşterilere kendinizi ve sunduğunuz hizmetleri tanıtın"
-                          : "İsteğe bağlı - Kendiniz hakkında kısa bilgi"}
+                        İsteğe bağlı - Kendinizi tanıtın
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -236,21 +195,26 @@ export default function ProfileSetup() {
                   )}
                 />
 
-                {userType === "provider" && (
-                  <>
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-2">Hizmet Sağlayıcı Bilgileri</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    İlan vermek istiyorsanız kategori seçin. Sadece hizmet aramak için boş bırakabilirsiniz.
+                  </p>
+
+                  <div className="space-y-6">
                     <FormField
                       control={form.control}
                       name="categoryId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Ana Kategori *</FormLabel>
+                          <FormLabel>Ana Kategori</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value ?? undefined}
                           >
                             <FormControl>
                               <SelectTrigger data-testid="select-category">
-                                <SelectValue placeholder="Kategori seçin" />
+                                <SelectValue placeholder="Kategori seçin (isteğe bağlı)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -261,6 +225,7 @@ export default function ProfileSetup() {
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormDescription>Hizmet vermek istiyorsanız kategori seçin</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -272,7 +237,7 @@ export default function ProfileSetup() {
                         name="subcategoryId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Alt Kategori *</FormLabel>
+                            <FormLabel>Alt Kategori</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value ?? undefined}
@@ -317,8 +282,8 @@ export default function ProfileSetup() {
                         </FormItem>
                       )}
                     />
-                  </>
-                )}
+                  </div>
+                </div>
 
                 <div className="flex justify-end gap-4">
                   <Button

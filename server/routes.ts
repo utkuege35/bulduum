@@ -151,7 +151,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/profile', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const validatedData = insertProfileSchema.parse({ ...req.body, userId });
+      
+      // Auto-determine userType based on category selection
+      const userType = req.body.categoryId ? "provider" : "customer";
+      
+      const validatedData = insertProfileSchema.parse({ 
+        ...req.body, 
+        userId,
+        userType 
+      });
       const profile = await storage.createProfile(validatedData);
       res.json(profile);
     } catch (error: any) {
