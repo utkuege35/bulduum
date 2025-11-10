@@ -52,11 +52,8 @@ export default function CreateListing() {
       city: "",
       district: "",
       neighborhood: "",
-      price: undefined,
     },
   });
-
-  const listingType = form.watch("listingType");
 
   const createListingMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
@@ -104,7 +101,6 @@ export default function CreateListing() {
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     const submitData = {
       ...data,
-      price: data.price ? Number(data.price) : undefined,
       subcategoryId: data.subcategoryId || undefined,
       neighborhood: data.neighborhood || undefined,
     };
@@ -299,29 +295,6 @@ export default function CreateListing() {
                     </FormItem>
                   )}
                 />
-
-                {listingType === "provider" && (
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fiyat (₺/saat - Opsiyonel)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Örn: 150"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                            data-testid="input-price"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
 
                 <div className="flex gap-4">
                   <Button

@@ -89,7 +89,6 @@ export const listings = pgTable("listings", {
   city: text("city").notNull(),
   district: text("district").notNull(),
   neighborhood: text("neighborhood"),
-  price: integer("price"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   listingTypeCheck: sql`CHECK (${table.listingType} IN ('provider', 'seeker'))`
