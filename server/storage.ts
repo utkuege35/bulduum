@@ -6,6 +6,7 @@ import {
   subcategories, 
   messages, 
   reviews,
+  listings,
   type User,
   type UpsertUser,
   type Profile,
@@ -18,6 +19,8 @@ import {
   type InsertMessage,
   type Review,
   type InsertReview,
+  type Listing,
+  type InsertListing,
 } from "@shared/schema";
 import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 
@@ -52,6 +55,12 @@ export interface IStorage {
   getProviderReviews(providerId: string): Promise<(Review & { customer: User })[]>;
   getProviderRating(providerId: string): Promise<{ average: number; count: number }>;
   createReview(review: InsertReview): Promise<Review>;
+  
+  // Listing methods
+  getListings(filters: { listingType?: string; categoryId?: string; city?: string; district?: string }): Promise<(Listing & { user: User; category: Category; subcategory?: Subcategory })[]>;
+  getListing(id: string): Promise<(Listing & { user: User; category: Category; subcategory?: Subcategory }) | undefined>;
+  createListing(listing: InsertListing): Promise<Listing>;
+  getUserListings(userId: string): Promise<(Listing & { category: Category; subcategory?: Subcategory })[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -237,6 +246,83 @@ export class DbStorage implements IStorage {
   async createReview(insertReview: InsertReview): Promise<Review> {
     const [review] = await db.insert(reviews).values(insertReview).returning();
     return review;
+  }
+
+  async getListings(filters: { listingType?: string; categoryId?: string; city?: string; district?: string }): Promise<(Listing & { user: User; category: Category; subcategory?: Subcategory })[]> {
+    let query = db
+      .select({
+        listing: listings,
+        user: users,
+        category: categories,
+        subcategory: subcategories,
+      })
+      .from(listings)
+      .innerJoin(users, eq(listings.userId, users.id))
+      .innerJoin(categories, eq(listings.categoryId, categories.id))
+      .leftJoin(subcategories, eq(listings.subcategoryId, subcategories.id))
+      .orderBy(desc(listings.createdAt))
+      .$dynamic();
+
+    const conditions = [];
+    if (filters.listingType) {
+      conditions.push(eq(listings.listingType, filters.listingType as "provider" | "seeker"));
+    }
+    if (filters.categoryId) {
+      conditions.push(eq(listings.categoryId, filters.categoryId));
+    }
+    if (filters.city) {
+      conditions.push(eq(listings.city, filters.city));
+    }
+    if (filters.district) {
+      conditions.push(eq(listings.district, filters.district));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const results = await query;
+    return results.map((r: any) => ({ ...r.listing, user: r.user, category: r.category, subcategory: r.subcategory || undefined }));
+  }
+
+  async getListing(id: string): Promise<(Listing & { user: User; category: Category; subcategory?: Subcategory }) | undefined> {
+    const results = await db
+      .select({
+        listing: listings,
+        user: users,
+        category: categories,
+        subcategory: subcategories,
+      })
+      .from(listings)
+      .innerJoin(users, eq(listings.userId, users.id))
+      .innerJoin(categories, eq(listings.categoryId, categories.id))
+      .leftJoin(subcategories, eq(listings.subcategoryId, subcategories.id))
+      .where(eq(listings.id, id));
+
+    if (results.length === 0) return undefined;
+    const r = results[0];
+    return { ...r.listing, user: r.user, category: r.category, subcategory: r.subcategory || undefined };
+  }
+
+  async createListing(insertListing: InsertListing): Promise<Listing> {
+    const [listing] = await db.insert(listings).values(insertListing).returning();
+    return listing;
+  }
+
+  async getUserListings(userId: string): Promise<(Listing & { category: Category; subcategory?: Subcategory })[]> {
+    const results = await db
+      .select({
+        listing: listings,
+        category: categories,
+        subcategory: subcategories,
+      })
+      .from(listings)
+      .innerJoin(categories, eq(listings.categoryId, categories.id))
+      .leftJoin(subcategories, eq(listings.subcategoryId, subcategories.id))
+      .where(eq(listings.userId, userId))
+      .orderBy(desc(listings.createdAt));
+
+    return results.map((r: any) => ({ ...r.listing, category: r.category, subcategory: r.subcategory || undefined }));
   }
 }
 

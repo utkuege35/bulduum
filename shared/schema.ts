@@ -78,6 +78,23 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const listings = pgTable("listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  listingType: text("listing_type").notNull().$type<"provider" | "seeker">(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  categoryId: varchar("category_id").notNull().references(() => categories.id),
+  subcategoryId: varchar("subcategory_id").references(() => subcategories.id),
+  city: text("city").notNull(),
+  district: text("district").notNull(),
+  neighborhood: text("neighborhood"),
+  price: integer("price"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  listingTypeCheck: sql`CHECK (${table.listingType} IN ('provider', 'seeker'))`
+}));
+
 // Insert schemas
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -124,6 +141,13 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+export const insertListingSchema = createInsertSchema(listings).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  listingType: z.enum(["provider", "seeker"]),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -144,3 +168,6 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+
+export type Listing = typeof listings.$inferSelect;
+export type InsertListing = z.infer<typeof insertListingSchema>;

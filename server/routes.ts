@@ -9,6 +9,7 @@ import {
   insertSubcategorySchema,
   insertMessageSchema,
   insertReviewSchema,
+  insertListingSchema,
   registerSchema,
   loginSchema 
 } from "@shared/schema";
@@ -310,6 +311,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error creating review:", error);
       res.status(400).json({ message: error.message || "Failed to create review" });
+    }
+  });
+
+  // Listing routes
+  app.get('/api/listings', async (req, res) => {
+    try {
+      const { listingType, categoryId, city, district } = req.query;
+      const listings = await storage.getListings({
+        listingType: listingType as string | undefined,
+        categoryId: categoryId as string | undefined,
+        city: city as string | undefined,
+        district: district as string | undefined,
+      });
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  app.get('/api/listings/:id', async (req, res) => {
+    try {
+      const listing = await storage.getListing(req.params.id);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      res.json(listing);
+    } catch (error) {
+      console.error("Error fetching listing:", error);
+      res.status(500).json({ message: "Failed to fetch listing" });
+    }
+  });
+
+  app.post('/api/listings', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const validatedData = insertListingSchema.parse({ ...req.body, userId });
+      const listing = await storage.createListing(validatedData);
+      res.json(listing);
+    } catch (error: any) {
+      console.error("Error creating listing:", error);
+      res.status(400).json({ message: error.message || "Failed to create listing" });
+    }
+  });
+
+  app.get('/api/my-listings', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const listings = await storage.getUserListings(userId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+      res.status(500).json({ message: "Failed to fetch user listings" });
     }
   });
 

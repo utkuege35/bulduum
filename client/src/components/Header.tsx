@@ -66,6 +66,11 @@ export default function Header() {
                 Hizmet / Ürün arayanlar
               </Button>
             </Link>
+            <Link href="/ilan-olustur" data-testid="link-create-listing">
+              <Button variant="ghost" size="sm" className="text-base">
+                İlan Oluştur
+              </Button>
+            </Link>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -151,6 +156,11 @@ export default function Header() {
             <Link href="/hizmet-arayanlar" data-testid="link-seekers-mobile">
               <Button variant="ghost" className="w-full justify-start">
                 Hizmet / Ürün arayanlar
+              </Button>
+            </Link>
+            <Link href="/ilan-olustur" data-testid="link-create-listing-mobile">
+              <Button variant="ghost" className="w-full justify-start">
+                İlan Oluştur
               </Button>
             </Link>
             <Button 
