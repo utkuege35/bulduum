@@ -56,14 +56,14 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/kategoriler" data-testid="link-categories">
-              <Button variant="ghost" size="sm" className="text-base">
-                Kategoriler
-              </Button>
-            </Link>
             <Link href="/hizmet-saglayicilar" data-testid="link-providers">
               <Button variant="ghost" size="sm" className="text-base">
-                Hizmet Sağlayıcılar
+                Hizmet / Ürün sağlayıcılar
+              </Button>
+            </Link>
+            <Link href="/hizmet-arayanlar" data-testid="link-seekers">
+              <Button variant="ghost" size="sm" className="text-base">
+                Hizmet / Ürün arayanlar
               </Button>
             </Link>
             <Button 
@@ -143,14 +143,14 @@ export default function Header() {
 
         {mobileMenuOpen && (
           <nav className="md:hidden py-4 flex flex-col gap-2 border-t" data-testid="nav-mobile">
-            <Link href="/kategoriler" data-testid="link-categories-mobile">
-              <Button variant="ghost" className="w-full justify-start">
-                Kategoriler
-              </Button>
-            </Link>
             <Link href="/hizmet-saglayicilar" data-testid="link-providers-mobile">
               <Button variant="ghost" className="w-full justify-start">
-                Hizmet Sağlayıcılar
+                Hizmet / Ürün sağlayıcılar
+              </Button>
+            </Link>
+            <Link href="/hizmet-arayanlar" data-testid="link-seekers-mobile">
+              <Button variant="ghost" className="w-full justify-start">
+                Hizmet / Ürün arayanlar
               </Button>
             </Link>
             <Button 
