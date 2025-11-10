@@ -29,9 +29,9 @@ export default function HeroSection() {
       
       <div className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 text-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-          Aradığın Her Hizmeti ve Ürünü
+          Aradığın her hizmeti ve ürünü
           <br />
-          Bir Tıkla Bul.
+          bir tıkla bul.
         </h1>
         <p className="text-lg md:text-xl text-white/90 mb-8">
           Özel ders, temizlik, bakım hizmetleri ve daha fazlası için güvenilir hizmet sağlayıcıları keşfedin
