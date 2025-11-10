@@ -87,7 +87,7 @@ export default function ProfileSetup() {
           <CardHeader>
             <CardTitle>Profilinizi Tamamlayın</CardTitle>
             <CardDescription>
-              Hizmet vermek veya hizmet aramak için profilinizi oluşturun. Kategori seçerseniz ilan verebilirsiniz.
+              Hizmet / Ürün sunmak veya aramak için profilinizi oluşturun.
             </CardDescription>
           </CardHeader>
           <CardContent>
