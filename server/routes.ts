@@ -152,8 +152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       
-      // Auto-determine userType based on category selection
-      const userType = req.body.categoryId ? "provider" : "customer";
+      // Default to customer on initial profile creation
+      // Users can become providers by adding category later via profile update
+      const userType = "customer";
       
       const validatedData = insertProfileSchema.parse({ 
         ...req.body, 
